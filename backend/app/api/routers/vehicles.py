@@ -25,7 +25,7 @@ def get_vehicles(
     min_price: Optional[float] = Query(None, ge=0, description="Minimum price filter"),
     max_price: Optional[float] = Query(None, ge=0, description="Maximum price filter"),
     sort_by: str = Query("created_at", description="Field to sort by (created_at, price, year, quantity, make)"),
-    sort_order: str = Query("desc", regex="^(asc|desc)$", description="Sort order"),
+    sort_order: str = Query("desc", pattern="^(asc|desc)$", description="Sort order"),
     page: int = Query(1, ge=1, description="Page number"),
     page_size: int = Query(12, ge=1, le=100, description="Items per page"),
     db: Session = Depends(get_db),

@@ -1,6 +1,6 @@
 from datetime import datetime
 from typing import Optional, List
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, ConfigDict
 from app.schemas.vehicle import VehicleResponse
 from app.schemas.user import UserResponse
 
@@ -28,8 +28,7 @@ class TransactionResponse(BaseModel):
     vehicle: Optional[VehicleResponse] = None
     user: Optional[UserResponse] = None
 
-    class Config:
-        from_attributes = True
+    model_config = ConfigDict(from_attributes=True)
 
 
 class TransactionListResponse(BaseModel):
