@@ -1,5 +1,5 @@
 from typing import Optional
-from fastapi import APIRouter, Depends, Query, status
+from fastapi import APIRouter, Depends, Query, status, HTTPException
 from sqlalchemy.orm import Session
 from app.db.session import get_db
 from app.api.deps import get_current_user, get_current_active_admin
@@ -60,11 +60,25 @@ def get_inventory_transactions(
     current_user: User = Depends(get_current_user),
     db: Session = Depends(get_db),
 ):
-    """Retrieves audit log of inventory transactions."""
+    """Retrieves audit log of inventory transactions.
+    
+    Regular users are strictly scoped to their own transaction history.
+    Administrators can access all transaction records across the dealership.
+    """
+    if current_user.role != "ADMIN":
+        if user_id is not None and user_id != current_user.id:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="You do not have permission to view other users' transaction history."
+            )
+        effective_user_id = current_user.id
+    else:
+        effective_user_id = user_id
+
     items, total = InventoryService.list_transactions(
         db=db,
         vehicle_id=vehicle_id,
-        user_id=user_id,
+        user_id=effective_user_id,
         transaction_type=transaction_type,
         limit=limit,
         offset=offset,

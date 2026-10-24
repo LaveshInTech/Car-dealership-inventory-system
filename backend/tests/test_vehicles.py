@@ -204,3 +204,61 @@ def test_delete_vehicle_regular_user_forbidden(client: TestClient, user_token: s
     )
     assert response.status_code == 403
     assert "Administrator privileges" in response.json()["detail"]
+
+
+def test_create_vehicle_unauthenticated_fails(client: TestClient):
+    payload = {
+        "make": "Ferrari",
+        "model": "296 GTB",
+        "category": "Coupe",
+        "price": 320000.0,
+        "quantity": 1,
+    }
+    response = client.post("/api/vehicles", json=payload)
+    assert response.status_code == 401
+    assert "credentials" in response.json()["detail"].lower() or "not authenticated" in response.json()["detail"].lower()
+
+
+def test_create_vehicle_invalid_token_fails(client: TestClient):
+    payload = {
+        "make": "Ferrari",
+        "model": "296 GTB",
+        "category": "Coupe",
+        "price": 320000.0,
+        "quantity": 1,
+    }
+    response = client.post(
+        "/api/vehicles",
+        json=payload,
+        headers={"Authorization": "Bearer invalid_or_expired_jwt_token"}
+    )
+    assert response.status_code == 401
+
+
+def test_update_vehicle_unauthenticated_fails(client: TestClient, sample_vehicle: Vehicle):
+    payload = {"price": 175000.0}
+    response = client.put(f"/api/vehicles/{sample_vehicle.id}", json=payload)
+    assert response.status_code == 401
+
+
+def test_update_vehicle_invalid_token_fails(client: TestClient, sample_vehicle: Vehicle):
+    payload = {"price": 175000.0}
+    response = client.put(
+        f"/api/vehicles/{sample_vehicle.id}",
+        json=payload,
+        headers={"Authorization": "Bearer malformed_token_abc"}
+    )
+    assert response.status_code == 401
+
+
+def test_delete_vehicle_unauthenticated_fails(client: TestClient, sample_vehicle: Vehicle):
+    response = client.delete(f"/api/vehicles/{sample_vehicle.id}")
+    assert response.status_code == 401
+
+
+def test_delete_vehicle_invalid_token_fails(client: TestClient, sample_vehicle: Vehicle):
+    response = client.delete(
+        f"/api/vehicles/{sample_vehicle.id}",
+        headers={"Authorization": "Bearer malformed_token_abc"}
+    )
+    assert response.status_code == 401

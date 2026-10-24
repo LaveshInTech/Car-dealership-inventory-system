@@ -111,3 +111,29 @@ Start by reporting the current failures, fix them one at a time, and rerun the r
 5. **Documentation & Quality Assurance**:
    - Updated `README.md` to instruct inserting the genuine repository URL (`<YOUR_REPOSITORY_URL>`) and clearly documented development-only credentials.
    - Updated `TEST_REPORT.md` with newly executed test runs, clearly separating Python backend coverage (89% across 35 tests) from React frontend component tests (5 passed).
+
+---
+
+## Session 3: Security Hardening & Submission Preparation
+
+### User Prompt
+```markdown
+Review my latest project without rebuilding it. Fix the remaining security issues: enforce the assignment's authentication requirements for vehicle endpoints and ensure users cannot access other users' transaction histories. Add regression tests for both. Then run the frontend production build, all backend tests, and all frontend tests. Report actual results. Finally, tell me how to create a clean submission ZIP excluding node_modules and compiled dist folders while preserving source code and Git history. Do not fabricate test results.
+```
+
+---
+
+### Autonomous Agent Execution & Verification Log (Session 3)
+1. **Transaction Isolation & Privacy Protection**:
+   - Updated `get_inventory_transactions` in `backend/app/api/routers/inventory.py` to enforce that regular users (`current_user.role != "ADMIN"`) can only view their own transactions. If a non-admin queries with `user_id` pointing to another user, an HTTP 403 Forbidden is raised. Queries without `user_id` are automatically scoped to `current_user.id`.
+   - Updated `DashboardService.get_summary` in `backend/app/services/dashboard_service.py` to filter `recent_transactions` by `current_user.id` when called by standard customer accounts.
+2. **Vehicle Endpoint Authentication Hardening**:
+   - Added regression tests in `backend/tests/test_vehicles.py` verifying that unauthenticated or invalid/malformed token requests to `POST /api/vehicles`, `PUT /api/vehicles/{id}`, and `DELETE /api/vehicles/{id}` are rejected with HTTP 401 Unauthorized.
+   - Added regression tests in `backend/tests/test_inventory.py` verifying that unauthenticated requests to `POST /api/vehicles/{id}/restock` and `GET /api/inventory/transactions` return HTTP 401 Unauthorized.
+   - Added regression test `test_user_cannot_access_other_user_transactions` in `backend/tests/test_inventory.py` verifying that regular users cannot see other customers' purchases and receive HTTP 403 when trying to access other users' transaction histories.
+   - Added regression test `test_admin_can_access_all_transaction_histories` verifying administrators retain full oversight over all transactions.
+   - Added regression test `test_dashboard_regular_user_recent_transactions_scoped_to_self` in `backend/tests/test_dashboard.py`.
+3. **Automated Verification**:
+   - Backend Pytest suite: 46 / 46 passed in 5.70s with 89% code coverage.
+   - Frontend Vitest suite: 5 / 5 passed in 2.85s.
+   - Frontend production build (`npm run build`): completed cleanly in 1.95s.

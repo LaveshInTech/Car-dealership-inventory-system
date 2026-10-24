@@ -192,3 +192,106 @@ def test_purchase_database_rollback_on_error(client: TestClient, user_token: str
     # Verify vehicle quantity was not decremented
     db_session.refresh(sample_vehicle)
     assert sample_vehicle.quantity == initial_stock
+
+
+def test_restock_vehicle_unauthenticated_fails(client: TestClient, sample_vehicle: Vehicle):
+    payload = {"units": 5}
+    response = client.post(f"/api/vehicles/{sample_vehicle.id}/restock", json=payload)
+    assert response.status_code == 401
+
+
+def test_inventory_transactions_unauthenticated_fails(client: TestClient):
+    response = client.get("/api/inventory/transactions")
+    assert response.status_code == 401
+
+
+def test_user_cannot_access_other_user_transactions(
+    client: TestClient,
+    regular_user,
+    user_token: str,
+    regular_user_2,
+    user2_token: str,
+    sample_vehicle: Vehicle,
+):
+    """Enforces that regular users can only access their own transaction history,
+    cannot see other users' transactions in the list, and are blocked with HTTP 403
+    if attempting to query another user's history."""
+    # User 1 makes a purchase
+    res1 = client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1, "notes": "Order for Customer 1"},
+        headers={"Authorization": f"Bearer {user_token}"}
+    )
+    assert res1.status_code == 200
+    tx1_id = res1.json()["id"]
+
+    # User 2 makes a purchase
+    res2 = client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1, "notes": "Order for Customer 2"},
+        headers={"Authorization": f"Bearer {user2_token}"}
+    )
+    assert res2.status_code == 200
+    tx2_id = res2.json()["id"]
+
+    # User 2 queries transaction list: must only see User 2's transaction
+    user2_list_res = client.get(
+        "/api/inventory/transactions",
+        headers={"Authorization": f"Bearer {user2_token}"}
+    )
+    assert user2_list_res.status_code == 200
+    data2 = user2_list_res.json()
+    item_ids = [item["id"] for item in data2["items"]]
+    assert tx2_id in item_ids
+    assert tx1_id not in item_ids
+    for item in data2["items"]:
+        assert item["user_id"] == regular_user_2.id
+
+    # User 2 attempts to query User 1's transaction history specifically -> HTTP 403 Forbidden
+    forbidden_res = client.get(
+        f"/api/inventory/transactions?user_id={regular_user.id}",
+        headers={"Authorization": f"Bearer {user2_token}"}
+    )
+    assert forbidden_res.status_code == 403
+    assert "permission to view other users" in forbidden_res.json()["detail"].lower()
+
+
+def test_admin_can_access_all_transaction_histories(
+    client: TestClient,
+    admin_token: str,
+    regular_user,
+    user_token: str,
+    regular_user_2,
+    user2_token: str,
+    sample_vehicle: Vehicle,
+):
+    """Verifies administrator can audit all transactions or filter by specific user."""
+    # User 1 purchase
+    client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1},
+        headers={"Authorization": f"Bearer {user_token}"}
+    )
+    # User 2 purchase
+    client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1},
+        headers={"Authorization": f"Bearer {user2_token}"}
+    )
+
+    # Admin global query
+    admin_res = client.get(
+        "/api/inventory/transactions",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert admin_res.status_code == 200
+    assert admin_res.json()["total"] >= 2
+
+    # Admin filtered query by User 1
+    admin_user1_res = client.get(
+        f"/api/inventory/transactions?user_id={regular_user.id}",
+        headers={"Authorization": f"Bearer {admin_token}"}
+    )
+    assert admin_user1_res.status_code == 200
+    for item in admin_user1_res.json()["items"]:
+        assert item["user_id"] == regular_user.id

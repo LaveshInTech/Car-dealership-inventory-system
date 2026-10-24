@@ -96,6 +96,28 @@ def user_token(regular_user: User) -> str:
 
 
 @pytest.fixture
+def regular_user_2(db_session: Session) -> User:
+    """Creates and returns a second active regular customer user."""
+    user = User(
+        email="test_customer2@apexmotors.com",
+        full_name="Second Customer",
+        hashed_password=get_password_hash("CustomerPass123!"),
+        role="USER",
+        is_active=True,
+    )
+    db_session.add(user)
+    db_session.commit()
+    db_session.refresh(user)
+    return user
+
+
+@pytest.fixture
+def user2_token(regular_user_2: User) -> str:
+    """Returns a valid JWT token for the second customer user."""
+    return create_access_token(subject=regular_user_2.email, role=regular_user_2.role)
+
+
+@pytest.fixture
 def sample_vehicle(db_session: Session) -> Vehicle:
     """Creates and returns a sample vehicle with 5 units in stock."""
     vehicle = Vehicle(

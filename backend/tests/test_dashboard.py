@@ -81,3 +81,42 @@ def test_dashboard_summary_metrics(
 def test_dashboard_unauthenticated_fails(client: TestClient):
     response = client.get("/api/dashboard/summary")
     assert response.status_code == 401
+
+
+def test_dashboard_regular_user_recent_transactions_scoped_to_self(
+    client: TestClient,
+    regular_user: User,
+    user_token: str,
+    regular_user_2: User,
+    user2_token: str,
+    sample_vehicle: Vehicle,
+):
+    """Verifies that on dashboard, standard users only see their own recent transactions."""
+    # User 1 makes a purchase
+    res1 = client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1},
+        headers={"Authorization": f"Bearer {user_token}"}
+    )
+    assert res1.status_code == 200
+    tx1_id = res1.json()["id"]
+
+    # User 2 makes a purchase
+    res2 = client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1},
+        headers={"Authorization": f"Bearer {user2_token}"}
+    )
+    assert res2.status_code == 200
+    tx2_id = res2.json()["id"]
+
+    # User 2 requests dashboard summary
+    dash_res = client.get(
+        "/api/dashboard/summary",
+        headers={"Authorization": f"Bearer {user2_token}"}
+    )
+    assert dash_res.status_code == 200
+    recent_txs = dash_res.json()["recent_transactions"]
+    tx_ids = [tx["id"] for tx in recent_txs]
+    assert tx2_id in tx_ids
+    assert tx1_id not in tx_ids

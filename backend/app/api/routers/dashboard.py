@@ -12,8 +12,7 @@ router = APIRouter(prefix="/dashboard", tags=["Dashboard & Analytics"])
 @router.get("/summary", response_model=DashboardSummaryResponse)
 def get_dashboard_summary(
     db: Session = Depends(get_db),
-    # Optional or authenticated: we can allow logged in users to view
     current_user: User = Depends(get_current_user),
 ):
     """Calculates live inventory valuations, stock distributions, and transaction metrics."""
-    return DashboardService.get_summary(db)
+    return DashboardService.get_summary(db, current_user=current_user)

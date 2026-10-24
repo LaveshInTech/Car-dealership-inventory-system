@@ -1,14 +1,15 @@
-from typing import List
+from typing import List, Optional
 from sqlalchemy.orm import Session
 from sqlalchemy import func, desc
 from app.models.vehicle import Vehicle
 from app.models.transaction import InventoryTransaction
+from app.models.user import User
 from app.schemas.dashboard import DashboardSummaryResponse, CategoryDistribution
 
 
 class DashboardService:
     @staticmethod
-    def get_summary(db: Session) -> DashboardSummaryResponse:
+    def get_summary(db: Session, current_user: Optional[User] = None) -> DashboardSummaryResponse:
         total_models = db.query(func.count(Vehicle.id)).scalar() or 0
         total_units = db.query(func.sum(Vehicle.quantity)).scalar() or 0
 
@@ -52,12 +53,11 @@ class DashboardService:
         ]
 
         recent_vehicles = db.query(Vehicle).order_by(desc(Vehicle.created_at)).limit(5).all()
-        recent_transactions = (
-            db.query(InventoryTransaction)
-            .order_by(desc(InventoryTransaction.created_at))
-            .limit(8)
-            .all()
-        )
+
+        tx_query = db.query(InventoryTransaction)
+        if current_user and current_user.role != "ADMIN":
+            tx_query = tx_query.filter(InventoryTransaction.user_id == current_user.id)
+        recent_transactions = tx_query.order_by(desc(InventoryTransaction.created_at)).limit(8).all()
 
         return DashboardSummaryResponse(
             total_models=total_models,
