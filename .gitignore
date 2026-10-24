@@ -25,6 +25,7 @@ wheels/
 htmlcov/
 *.db
 *.sqlite3
+*.zip
 
 # Node & Frontend
 node_modules/

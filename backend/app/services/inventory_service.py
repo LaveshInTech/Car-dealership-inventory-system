@@ -1,3 +1,4 @@
+import logging
 from typing import Optional, List, Tuple
 from decimal import Decimal
 from sqlalchemy.orm import Session
@@ -6,6 +7,8 @@ from fastapi import HTTPException, status
 from app.models.vehicle import Vehicle
 from app.models.transaction import InventoryTransaction
 from app.models.user import User
+
+logger = logging.getLogger(__name__)
 
 
 class InventoryService:
@@ -77,9 +80,10 @@ class InventoryService:
             raise
         except Exception as e:
             db.rollback()
+            logger.error(f"Internal error during purchase execution: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Transaction processing failed: {str(e)}"
+                detail="Transaction processing failed. Please try again later."
             )
 
     @staticmethod
@@ -134,9 +138,10 @@ class InventoryService:
             raise
         except Exception as e:
             db.rollback()
+            logger.error(f"Internal error during restock execution: {str(e)}", exc_info=True)
             raise HTTPException(
                 status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
-                detail=f"Restock failed: {str(e)}"
+                detail="Restock processing failed. Please try again later."
             )
 
     @staticmethod

@@ -27,10 +27,28 @@ class Settings(BaseSettings):
         "http://localhost:8080",
     ]
 
-    # Initial Dev Admin credentials
+    # Development-Only Seed Credentials (NEVER used in production)
     INITIAL_ADMIN_EMAIL: str = "admin@apexmotors.com"
     INITIAL_ADMIN_PASSWORD: str = "AdminSecurePass2026!"
     INITIAL_ADMIN_NAME: str = "Apex Dealership Admin"
+
+    @field_validator("SECRET_KEY", mode="after")
+    @classmethod
+    def validate_production_secret_key(cls, v: str, info) -> str:
+        env = os.getenv("ENVIRONMENT", "development").lower()
+        insecure_keys = [
+            "supersecretjwtkey_change_in_production_min_32_characters_long!",
+            "secret",
+            "changeme",
+            "default",
+        ]
+        if env == "production":
+            if not v or v in insecure_keys or len(v) < 32:
+                raise ValueError(
+                    "CRITICAL: A secure, randomly generated SECRET_KEY with at least 32 characters "
+                    "must be provided via environment variable in production."
+                )
+        return v
 
     @field_validator("ALLOWED_ORIGINS", mode="before")
     @classmethod

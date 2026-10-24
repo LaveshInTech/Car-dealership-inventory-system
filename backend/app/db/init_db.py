@@ -204,7 +204,14 @@ def init_db(db: Session = None) -> None:
         close_at_end = True
 
     try:
-        # Seed Admin User
+        # Prevent seeding default development administrator in production
+        if settings.ENVIRONMENT.lower() == "production":
+            logger.warning(
+                "Production environment detected. Skipping automatic development administrator and demo user seed."
+            )
+            return
+
+        # Seed Admin User (Development Only)
         admin_email = settings.INITIAL_ADMIN_EMAIL
         admin = db.query(User).filter(User.email == admin_email).first()
         if not admin:

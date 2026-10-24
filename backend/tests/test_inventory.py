@@ -143,3 +143,52 @@ def test_inventory_transactions_list(client: TestClient, user_token: str, sample
     assert data["total"] >= 1
     assert len(data["items"]) >= 1
     assert data["items"][0]["transaction_type"] in ["PURCHASE", "RESTOCK"]
+
+
+def test_purchase_zero_or_negative_units_rejected(client: TestClient, user_token: str, sample_vehicle: Vehicle):
+    headers = {"Authorization": f"Bearer {user_token}"}
+    
+    # 0 units
+    res0 = client.post(f"/api/vehicles/{sample_vehicle.id}/purchase", json={"units": 0}, headers=headers)
+    assert res0.status_code in [400, 422]
+
+    # Negative units
+    res_neg = client.post(f"/api/vehicles/{sample_vehicle.id}/purchase", json={"units": -3}, headers=headers)
+    assert res_neg.status_code in [400, 422]
+
+
+def test_restock_zero_or_negative_units_rejected(client: TestClient, admin_token: str, sample_vehicle: Vehicle):
+    headers = {"Authorization": f"Bearer {admin_token}"}
+    
+    # 0 units
+    res0 = client.post(f"/api/vehicles/{sample_vehicle.id}/restock", json={"units": 0}, headers=headers)
+    assert res0.status_code in [400, 422]
+
+    # Negative units
+    res_neg = client.post(f"/api/vehicles/{sample_vehicle.id}/restock", json={"units": -5}, headers=headers)
+    assert res_neg.status_code in [400, 422]
+
+
+def test_purchase_database_rollback_on_error(client: TestClient, user_token: str, sample_vehicle: Vehicle, db_session: Session, monkeypatch):
+    """Verifies database rollback occurs and changes are discarded if an unexpected error occurs during purchase."""
+    initial_stock = sample_vehicle.quantity
+
+    # Monkeypatch db.commit to raise an exception simulating unexpected database error
+    def mock_commit_error():
+        raise RuntimeError("Simulated connection drop or database disk full failure")
+
+    monkeypatch.setattr(db_session, "commit", mock_commit_error)
+
+    response = client.post(
+        f"/api/vehicles/{sample_vehicle.id}/purchase",
+        json={"units": 1},
+        headers={"Authorization": f"Bearer {user_token}"}
+    )
+    assert response.status_code == 500
+    # Verify sanitized message, no raw exception details exposed
+    assert "Simulated connection drop" not in response.json()["detail"]
+    assert "Transaction processing failed" in response.json()["detail"]
+
+    # Verify vehicle quantity was not decremented
+    db_session.refresh(sample_vehicle)
+    assert sample_vehicle.quantity == initial_stock

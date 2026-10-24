@@ -64,11 +64,11 @@ export const App: React.FC = () => {
                   }
                 />
 
-                {/* Authenticated Staff / User Vehicle Management */}
+                {/* Administrative Vehicle Management (Admin Only) */}
                 <Route
                   path="/vehicles/new"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireAdmin={true}>
                       <AddVehiclePage />
                     </ProtectedRoute>
                   }
@@ -76,7 +76,7 @@ export const App: React.FC = () => {
                 <Route
                   path="/vehicles/:id/edit"
                   element={
-                    <ProtectedRoute>
+                    <ProtectedRoute requireAdmin={true}>
                       <EditVehiclePage />
                     </ProtectedRoute>
                   }

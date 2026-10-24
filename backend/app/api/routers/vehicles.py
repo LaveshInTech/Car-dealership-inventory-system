@@ -93,10 +93,10 @@ def get_vehicle_details(vehicle_id: int, db: Session = Depends(get_db)):
 @router.post("", response_model=VehicleResponse, status_code=status.HTTP_201_CREATED)
 def create_vehicle(
     vehicle_in: VehicleCreate,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(get_current_active_admin),
     db: Session = Depends(get_db),
 ):
-    """Creates a new vehicle record (Authenticated users)."""
+    """Creates a new vehicle record (Admin only)."""
     return VehicleService.create_vehicle(db, vehicle_in)
 
 
@@ -104,10 +104,10 @@ def create_vehicle(
 def update_vehicle(
     vehicle_id: int,
     vehicle_in: VehicleUpdate,
-    current_user: User = Depends(get_current_user),
+    admin_user: User = Depends(get_current_active_admin),
     db: Session = Depends(get_db),
 ):
-    """Updates vehicle specifications and inventory count (Authenticated users)."""
+    """Updates vehicle specifications and inventory count (Admin only)."""
     return VehicleService.update_vehicle(db, vehicle_id, vehicle_in)
 
 

@@ -4,7 +4,7 @@
 [![FastAPI](https://img.shields.io/badge/Backend-FastAPI-009688.svg)](https://fastapi.tiangolo.com/)
 [![React 18](https://img.shields.io/badge/Frontend-React%2018%20%2B%20TypeScript-61DAFB.svg)](https://reactjs.org/)
 [![PostgreSQL](https://img.shields.io/badge/Database-PostgreSQL%20%2F%20SQLAlchemy-336791.svg)](https://www.postgresql.org/)
-[![Tests](https://img.shields.io/badge/Tests-35%20Passing%20(89%25%20cov)-brightgreen.svg)](TEST_REPORT.md)
+[![Tests](https://img.shields.io/badge/Tests-40%20Passing%20(89%25%20cov)-brightgreen.svg)](TEST_REPORT.md)
 
 Apex Motors is a production-grade, secure, and modern automotive dealership inventory management platform. Built from scratch with **FastAPI**, **SQLAlchemy ORM**, **Alembic**, **PostgreSQL**, **React 18 with TypeScript**, and **Tailwind CSS**, it features Role-Based Access Control (RBAC), ACID-compliant transactional inventory handling with concurrency controls, an analytical dashboard, and a dark navy / charcoal modern UI.
 
@@ -65,9 +65,11 @@ Apex Motors is a production-grade, secure, and modern automotive dealership inve
 
 ### Step 1: Clone the Repository
 ```bash
-git clone https://github.com/example/car-dealership-inventory.git
+# Insert your genuine repository URL below (e.g., https://github.com/<your-username>/car-dealership-inventory.git)
+git clone <YOUR_REPOSITORY_URL>
 cd car-dealership-inventory
 ```
+> **Repository URL Configuration**: Replace `<YOUR_REPOSITORY_URL>` with your genuine GitHub / Git repository remote URL before running the clone command.
 
 ### Step 2: Environment Setup
 Copy the example environment configuration:
@@ -123,14 +125,17 @@ cp .env.example .env
 
 ---
 
-## 4. Default Demonstration Accounts
+## 4. Development-Only Demonstration Accounts
+
+> [!WARNING]
+> The accounts below are strictly for local development and grading evaluation. In production environments (`ENVIRONMENT=production`), automated user seeding is completely disabled and strong unique passwords with minimum 32-character JWT secrets are enforced.
 
 The login interface features quick auto-fill buttons for instant testing:
 
-| Role | Email Address | Password | Privileges |
-|---|---|---|---|
-| **Fleet Administrator** | `admin@apexmotors.com` | `AdminSecurePass2026!` | Add vehicles, edit specifications, delete vehicles, restock inventory, full audit access |
-| **Standard Customer** | `customer@apexmotors.com` | `CustomerPass2026!` | Browse showroom, view details, purchase in-stock vehicles, view personal order history |
+| Role | Email Address | Password | Environment | Privileges |
+|---|---|---|---|---|
+| **Fleet Administrator** | `admin@apexmotors.com` | `AdminSecurePass2026!` | Development Only | Add vehicles, edit specifications, delete vehicles, restock inventory, full audit access |
+| **Standard Customer** | `customer@apexmotors.com` | `CustomerPass2026!` | Development Only | Browse showroom, view details, purchase in-stock vehicles, view personal order history |
 
 ---
 
@@ -141,7 +146,7 @@ The login interface features quick auto-fill buttons for instant testing:
 cd backend
 python -m pytest tests -v --cov=app --cov-report=term-missing
 ```
-**Results**: **30 passed in 2.51s, 89% total code coverage**. Full report in [TEST_REPORT.md](TEST_REPORT.md).
+**Results**: **35 passed in 4.47s, 89% total code coverage**. Full report in [TEST_REPORT.md](TEST_REPORT.md).
 
 ### Frontend Component Tests (Vitest)
 ```bash

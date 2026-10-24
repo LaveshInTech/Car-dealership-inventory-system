@@ -78,11 +78,15 @@ export const InventoryPage: React.FC = () => {
   }, [searchParams]);
 
   const updateFilters = (newParams: Record<string, string | null>) => {
-    const current = Object.fromEntries(searchParams.entries());
-    const merged: Record<string, any> = { ...current, ...newParams, page: '1' }; // reset to page 1 on filter change
-    // clean empty keys
-    Object.keys(merged).forEach((key) => {
-      if (!merged[key] || merged[key] === 'All') {
+    const current: Record<string, string> = {};
+    searchParams.forEach((value, key) => {
+      current[key] = value;
+    });
+    const merged: Record<string, string> = { ...current, page: '1' };
+    Object.entries(newParams).forEach(([key, val]) => {
+      if (val && val !== 'All') {
+        merged[key] = val;
+      } else {
         delete merged[key];
       }
     });
@@ -388,7 +392,7 @@ export const InventoryPage: React.FC = () => {
                           >
                             <ShoppingCart className="w-4 h-4" />
                           </Link>
-                          {isAuthenticated && (
+                          {isAdmin && (
                             <Link
                               to={`/vehicles/${v.id}/edit`}
                               className="p-1.5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700"

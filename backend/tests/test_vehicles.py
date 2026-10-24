@@ -81,7 +81,7 @@ def test_get_vehicle_by_id_not_found(client: TestClient):
     assert "not found" in response.json()["detail"].lower()
 
 
-def test_create_vehicle_authenticated(client: TestClient, user_token: str):
+def test_create_vehicle_admin_success(client: TestClient, admin_token: str):
     payload = {
         "make": "Audi",
         "model": "R8 V10 Performance",
@@ -96,7 +96,7 @@ def test_create_vehicle_authenticated(client: TestClient, user_token: str):
     response = client.post(
         "/api/vehicles",
         json=payload,
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 201
     data = response.json()
@@ -106,7 +106,24 @@ def test_create_vehicle_authenticated(client: TestClient, user_token: str):
     assert "id" in data
 
 
-def test_create_vehicle_invalid_price(client: TestClient, user_token: str):
+def test_create_vehicle_regular_user_forbidden(client: TestClient, user_token: str):
+    payload = {
+        "make": "Audi",
+        "model": "R8 V10 Performance",
+        "category": "Coupe",
+        "price": 210000.0,
+        "quantity": 2,
+    }
+    response = client.post(
+        "/api/vehicles",
+        json=payload,
+        headers={"Authorization": f"Bearer {user_token}"}
+    )
+    assert response.status_code == 403
+    assert "Administrator privileges" in response.json()["detail"]
+
+
+def test_create_vehicle_invalid_price(client: TestClient, admin_token: str):
     payload = {
         "make": "Audi",
         "model": "R8",
@@ -117,12 +134,12 @@ def test_create_vehicle_invalid_price(client: TestClient, user_token: str):
     response = client.post(
         "/api/vehicles",
         json=payload,
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 422  # Pydantic validation error gt=0
 
 
-def test_create_vehicle_negative_quantity(client: TestClient, user_token: str):
+def test_create_vehicle_negative_quantity(client: TestClient, admin_token: str):
     payload = {
         "make": "Audi",
         "model": "R8",
@@ -133,12 +150,12 @@ def test_create_vehicle_negative_quantity(client: TestClient, user_token: str):
     response = client.post(
         "/api/vehicles",
         json=payload,
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 422  # Pydantic validation ge=0
 
 
-def test_update_vehicle_success(client: TestClient, user_token: str, sample_vehicle: Vehicle):
+def test_update_vehicle_admin_success(client: TestClient, admin_token: str, sample_vehicle: Vehicle):
     payload = {
         "price": 195000.0,
         "color": "Gentian Blue Metallic",
@@ -146,13 +163,26 @@ def test_update_vehicle_success(client: TestClient, user_token: str, sample_vehi
     response = client.put(
         f"/api/vehicles/{sample_vehicle.id}",
         json=payload,
-        headers={"Authorization": f"Bearer {user_token}"}
+        headers={"Authorization": f"Bearer {admin_token}"}
     )
     assert response.status_code == 200
     data = response.json()
     assert data["price"] == 195000.0
     assert data["color"] == "Gentian Blue Metallic"
     assert data["make"] == sample_vehicle.make
+
+
+def test_update_vehicle_regular_user_forbidden(client: TestClient, user_token: str, sample_vehicle: Vehicle):
+    payload = {
+        "price": 195000.0,
+    }
+    response = client.put(
+        f"/api/vehicles/{sample_vehicle.id}",
+        json=payload,
+        headers={"Authorization": f"Bearer {user_token}"}
+    )
+    assert response.status_code == 403
+    assert "Administrator privileges" in response.json()["detail"]
 
 
 def test_delete_vehicle_admin_only(client: TestClient, admin_token: str, sample_vehicle: Vehicle):
