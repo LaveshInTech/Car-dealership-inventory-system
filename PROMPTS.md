@@ -54,9 +54,56 @@ Complete frontend, backend, migrations, seed data, automated tests, test report,
 
 ---
 
-## Autonomous Agent Actions Log
-- Agent: Antigravity (Google DeepMind Advanced Agentic Coding)
-- Environment Setup: MinGit, Node.js v20 LTS, Python 3.12, FastAPI, SQLAlchemy, Alembic, Pytest, Pydantic, Passlib, PyJWT.
-- Architecture Plan: Created ARCHITECTURE_PLAN.md.
-- Directory Initialized: `C:\Users\laves\.gemini\antigravity\scratch\car-dealership-inventory`
-- Phase 1 completed: Git repository initialized, `.gitignore`, `.env.example`, `docker-compose.yml`, `PROMPTS.md`.
+## Autonomous Agent Execution Trail
+
+### Phase 1: Environment & Tooling
+- Target Directory: `C:\Users\laves\.gemini\antigravity\scratch\car-dealership-inventory`
+- Installed and verified toolchains: Portable MinGit 2.44, Node.js v20.18.0 LTS, Python 3.12.1.
+- Initialized local Git repository on branch `main`.
+- Authored initial `.gitignore`, `.env.example`, `docker-compose.yml`, and initial `PROMPTS.md`.
+- Commit `923507b`: `chore: initialize project structure and dev environment`.
+
+### Phase 2: Backend Architecture & Database Migrations
+- Configured FastAPI core settings via Pydantic-Settings (`app/core/config.py`).
+- Implemented Argon2id password hashing and JWT access token handling (`app/core/security.py`).
+- Authored SQLAlchemy declarative models: `User`, `Vehicle`, `InventoryTransaction`.
+- Configured Alembic and generated revision `34aff9022d2a_initial_schema.py`.
+- Authored realistic seed script (`app/db/init_db.py`) containing 12 luxury vehicles, initial audit ledger entries, demo customer, and dev admin credentials.
+- Commit `a8e94ff`: `feat: establish database models, Alembic migrations, and seed script`.
+
+### Phase 3: Test-Driven Development (Backend Pytest)
+- Created isolated SQLite in-memory testing fixture in `backend/tests/conftest.py`.
+- Implemented and executed 30 test cases:
+  - `tests/test_auth.py`: Registration, duplicate email rejection, Argon2 hashing validation, login, token expiration, profile lookup.
+  - `tests/test_vehicles.py`: CRUD, pagination, multi-field search, price validation, negative quantity rejection, admin-only deletion.
+  - `tests/test_inventory.py`: Atomic purchase, zero-stock rejection, overselling rejection, concurrent purchase validation, admin restock authorization.
+  - `tests/test_dashboard.py`: Valuation computation, category distribution, sales revenue tracking.
+- All 30 tests PASSED with 89% total code coverage.
+- Commit `32b07ad`: `test: implement comprehensive Pytest test suite with 89% coverage`.
+
+### Phase 4: Frontend Development (React + TypeScript + Vite)
+- Scaffolded Vite React TypeScript project in `frontend/`.
+- Configured Tailwind CSS with deep navy brand colors (`brand-900`) and modern automotive aesthetic.
+- Implemented global `AuthContext`, persistent token management, and custom toast notification system.
+- Created reusable components: `Navbar`, `ProtectedRoute`, `StatCard`, `VehicleCard`.
+- Built 12 responsive pages:
+  1. `LoginPage`
+  2. `RegisterPage`
+  3. `DashboardPage` (with Recharts)
+  4. `InventoryPage` (Grid/Table views, multi-filter)
+  5. `VehicleDetailsPage` (Specs, gallery, vehicle ledger)
+  6. `AddVehiclePage`
+  7. `EditVehiclePage`
+  8. `PurchaseConfirmPage`
+  9. `TransactionsPage`
+  10. `AdminPage` (Restock modal, safe deletion)
+  11. `ProfilePage`
+  12. `NotFoundPage` (404) and `UnauthorizedPage` (403)
+- Authored Vitest component tests (`StatCard.test.tsx`, `VehicleCard.test.tsx`, `LoginPage.test.tsx`). All 5 tests passed.
+- Compiled production build with Vite (`npm run build`).
+- Commit `48d7ad6`: `feat: build responsive React + TypeScript frontend with 12 pages`.
+
+### Phase 5: Documentation & Quality Assurance
+- Created `TEST_REPORT.md` documenting executed test suites and coverage metrics.
+- Created comprehensive `README.md` with setup instructions, Docker instructions, API reference, and the detailed `My AI Usage` section.
+- Verified live FastAPI backend health, vehicles listing, and authentication.
